@@ -1,0 +1,37 @@
+[package]
+name = "sp-auto-id"
+version = "0.1.0"
+authors = ["Vedhavyas Singareddi <ved@subspace.network>"]
+edition = "2021"
+license = "Apache-2.0"
+homepage = "https://subspace.network"
+repository = "https://github.com/autonomys/subspace"
+description = "Primitives for AutoId"
+include = [
+    "/src",
+    "/Cargo.toml",
+    "/README.md",
+]
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
+scale-info = { version = "2.11.2", default-features = false, features = ["derive"] }
+sp-core = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-externalities = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-runtime-interface = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+subspace-runtime-primitives = { version = "0.1.0", path = "../../../crates/subspace-runtime-primitives", default-features = false }
+x509-parser = { version = "0.16.0", features = ["verify"], optional = true }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "sp-core/std",
+    "sp-externalities/std",
+    "sp-runtime-interface/std",
+    "subspace-runtime-primitives/std",
+    "x509-parser"
+]
+
+runtime-benchmarks = []

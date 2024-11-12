@@ -1,0 +1,36 @@
+[package]
+name = "sc-proof-of-time"
+description = "Subspace proof of time implementation"
+license = "MIT OR Apache-2.0"
+version = "0.1.0"
+authors = ["Rahul Subramaniyam <rahulksnv@gmail.com>"]
+edition = "2021"
+include = [
+    "/src",
+    "/Cargo.toml",
+]
+
+[dependencies]
+core_affinity = "0.8.1"
+derive_more = { version = "1.0.0", features = ["full"] }
+futures = "0.3.31"
+parity-scale-codec = { version = "3.6.12", features = ["derive"] }
+parking_lot = "0.12.2"
+rayon = "1.10.0"
+schnellru = "0.2.3"
+sc-client-api = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sc-consensus-slots = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sc-network = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sc-network-gossip = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-api = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-blockchain = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-consensus = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-consensus-slots = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-consensus-subspace = { version = "0.1.0", path = "../sp-consensus-subspace" }
+sp-inherents = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-runtime = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+subspace-core-primitives = { version = "0.1.0", path = "../subspace-core-primitives" }
+subspace-proof-of-time = { version = "0.1.0", path = "../subspace-proof-of-time" }
+thread-priority = "1.1.0"
+tokio = { version = "1.40.0", features = ["sync"] }
+tracing = "0.1.40"

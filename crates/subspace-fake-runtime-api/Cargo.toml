@@ -1,0 +1,66 @@
+[package]
+name = "subspace-fake-runtime-api"
+version = "0.1.0"
+authors = ["Subspace Labs <https://subspace.network>"]
+description = "Fake subspace runtime API."
+edition = "2021"
+license = "GPL-3.0-or-later"
+homepage = "https://subspace.network"
+repository = "https://github.com/autonomys/subspace"
+include = ["/src", "/Cargo.toml"]
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+domain-runtime-primitives = { version = "0.1.0", default-features = false, path = "../../domains/primitives/runtime" }
+frame-support = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+pallet-mmr = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+pallet-transaction-payment = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-api = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-block-builder = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-blockchain = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-consensus-subspace = { default-features = false, path = "../sp-consensus-subspace" }
+sp-core = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-domains = { version = "0.1.0", default-features = false, path = "../sp-domains" }
+sp-domains-fraud-proof = { version = "0.1.0", default-features = false, path = "../sp-domains-fraud-proof" }
+sp-genesis-builder = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-inherents = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-messenger = { default-features = false, version = "0.1.0", path = "../../domains/primitives/messenger" }
+sp-objects = { default-features = false, path = "../sp-objects" }
+sp-offchain = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-runtime = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-session = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-subspace-mmr = { default-features = false, path = "../sp-subspace-mmr" }
+sp-transaction-pool = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-version = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+subspace-core-primitives = { version = "0.1.0", default-features = false, path = "../subspace-core-primitives" }
+subspace-runtime-primitives = { version = "0.1.0", default-features = false, path = "../subspace-runtime-primitives" }
+
+[features]
+default = ["std"]
+
+std = [
+    "domain-runtime-primitives/std",
+    "frame-support/std",
+    "frame-system-rpc-runtime-api/std",
+    "pallet-mmr/std",
+    "pallet-transaction-payment-rpc-runtime-api/std",
+    "pallet-transaction-payment/std",
+    "sp-consensus-subspace/std",
+    "sp-core/std",
+    "sp-domains-fraud-proof/std",
+    "sp-domains/std",
+    "sp-genesis-builder/std",
+    "sp-inherents/std",
+    "sp-messenger/std",
+    "sp-objects/std",
+    "sp-offchain/std",
+    "sp-runtime/std",
+    "sp-session/std",
+    "sp-transaction-pool/std",
+    "sp-version/std",
+    "subspace-core-primitives/std",
+]

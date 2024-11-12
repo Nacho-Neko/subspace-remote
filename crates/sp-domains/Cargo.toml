@@ -1,0 +1,72 @@
+[package]
+name = "sp-domains"
+version = "0.1.0"
+authors = ["Subspace Labs <https://subspace.network>"]
+edition = "2021"
+license = "Apache-2.0"
+homepage = "https://subspace.network"
+repository = "https://github.com/autonomys/subspace"
+description = "Primitives of domains pallet"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+blake2 = { version = "0.10.6", default-features = false }
+domain-runtime-primitives = { version = "0.1.0", default-features = false, path = "../../domains/primitives/runtime" }
+frame-support = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+hash-db = { version = "0.16.0", default-features = false }
+memory-db = { version = "0.32.0", default-features = false }
+hexlit = "0.5.5"
+parity-scale-codec = { version = "3.6.12", default-features = false, features = ["derive"] }
+rand = { version = "0.8.5", default-features = false }
+rand_chacha = { version = "0.3.1", default-features = false }
+rs_merkle = { version = "1.4.2", default-features = false }
+scale-info = { version = "2.11.2", default-features = false, features = ["derive"] }
+serde = { version = "1.0.110", default-features = false, features = ["alloc", "derive"] }
+sp-api = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-application-crypto = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-core = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-runtime = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-runtime-interface = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-state-machine = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-std = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-trie = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-version = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-weights = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+subspace-core-primitives = { version = "0.1.0", default-features = false, path = "../subspace-core-primitives" }
+subspace-runtime-primitives = { version = "0.1.0", default-features = false, path = "../subspace-runtime-primitives" }
+trie-db = { version = "0.29.1", default-features = false }
+
+[dev-dependencies]
+num-traits = "0.2.18"
+rand = { version = "0.8.5", features = ["min_const_gen"] }
+
+[features]
+default = ["std"]
+std = [
+    "blake2/std",
+    "domain-runtime-primitives/std",
+    "frame-support/std",
+    "hash-db/std",
+    "parity-scale-codec/std",
+    "rand/std",
+    "rand_chacha/std",
+    "rs_merkle/std",
+    "scale-info/std",
+    "serde/std",
+    "sp-api/std",
+    "sp-application-crypto/std",
+    "sp-core/std",
+    "sp-runtime/std",
+    "sp-runtime-interface/std",
+    "sp-state-machine/std",
+    "sp-std/std",
+    "sp-trie/std",
+    "sp-version/std",
+    "sp-weights/std",
+    "subspace-core-primitives/std",
+    "subspace-runtime-primitives/std",
+    "trie-db/std",
+]
+runtime-benchmarks = []

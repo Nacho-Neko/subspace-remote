@@ -1,0 +1,56 @@
+[package]
+name = "subspace-archiving"
+description = "Collection of modules used for dealing with archived state of Subspace Network"
+license = "Apache-2.0"
+version = "0.1.0"
+authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
+edition = "2021"
+include = [
+    "/benches",
+    "/src",
+    "/Cargo.toml",
+    "/README.md",
+]
+
+[lib]
+# Necessary for CLI options to work on benches
+bench = false
+
+[dependencies]
+parity-scale-codec = { version = "3.6.12", default-features = false, features = ["derive"] }
+rayon = { version = "1.10.0", optional = true }
+serde = { version = "1.0.110", optional = true, features = ["derive"] }
+subspace-core-primitives = { version = "0.1.0", path = "../subspace-core-primitives", default-features = false }
+subspace-erasure-coding = { version = "0.1.0", path = "../subspace-erasure-coding", default-features = false }
+subspace-kzg = { version = "0.1.0", path = "../../shared/subspace-kzg", default-features = false }
+thiserror = { version = "2.0.0", default-features = false }
+
+[dev-dependencies]
+criterion = "0.5.1"
+rand = { version = "0.8.5", features = ["min_const_gen"] }
+subspace-core-primitives = { version = "0.1.0", path = "../subspace-core-primitives" }
+subspace-verification = { version = "0.1.0", path = "../subspace-verification" }
+
+[features]
+default = ["std"]
+parallel = [
+    "dep:rayon",
+    "subspace-core-primitives/parallel",
+]
+serde = [
+    "dep:serde",
+    "subspace-core-primitives/serde",
+]
+std = [
+    "parity-scale-codec/std",
+    "parallel",
+    "serde",
+    "subspace-core-primitives/std",
+    "subspace-erasure-coding/std",
+    "subspace-kzg/std",
+    "thiserror/std",
+]
+
+[[bench]]
+name = "archiving"
+harness = false

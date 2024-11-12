@@ -1,0 +1,64 @@
+[package]
+name = "sc-consensus-subspace"
+version = "0.1.0"
+authors = ["Parity Technologies <admin@parity.io>", "Subspace Labs <admin@subspace.network>"]
+description = "Subspace consensus algorithm for substrate"
+edition = "2021"
+license = "GPL-3.0-or-later WITH Classpath-exception-2.0"
+homepage = "https://subspace.network"
+repository = "https://github.com/autonomys/subspace"
+documentation = "https://docs.rs/sc-consensus-subspace"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+async-trait = "0.1.83"
+codec = { package = "parity-scale-codec", version = "3.6.12", features = ["derive"] }
+futures = "0.3.31"
+parking_lot = "0.12.2"
+rand = "0.8.5"
+rand_chacha = "0.3.1"
+rayon = "1.10.0"
+schnellru = "0.2.3"
+schnorrkel = "0.11.4"
+sc-client-api = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sc-consensus = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sc-consensus-slots = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sc-proof-of-time = { version = "0.1.0", path = "../sc-proof-of-time" }
+sc-telemetry = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sc-transaction-pool-api = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sc-utils = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-api = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-blockchain = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-block-builder = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-consensus = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-consensus-subspace = { version = "0.1.0", path = "../sp-consensus-subspace" }
+sp-consensus-slots = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-core = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-inherents = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-objects = { version = "0.1.0", path = "../sp-objects" }
+sp-runtime = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+subspace-archiving = { version = "0.1.0", path = "../subspace-archiving" }
+subspace-core-primitives = { version = "0.1.0", path = "../subspace-core-primitives" }
+subspace-erasure-coding = { version = "0.1.0", path = "../subspace-erasure-coding" }
+subspace-kzg = { version = "0.1.0", path = "../../shared/subspace-kzg" }
+subspace-proof-of-space = { version = "0.1.0", path = "../subspace-proof-of-space" }
+subspace-verification = { version = "0.1.0", path = "../subspace-verification" }
+thiserror = "2.0.0"
+tokio = { version = "1.40.0", features = ["sync", "time"] }
+tracing = "0.1.40"
+
+[dev-dependencies]
+# TODO: Restore in the future, currently tests are mostly broken and useless
+#sc-block-builder = { git = "https://github.com/subspace/substrate", rev = "88bb945975301f9b29bad96dc4590c33f1029eae" }
+#sc-cli = { git = "https://github.com/subspace/substrate", rev = "88bb945975301f9b29bad96dc4590c33f1029eae", default-features = false }
+#sc-service = { git = "https://github.com/subspace/substrate", rev = "88bb945975301f9b29bad96dc4590c33f1029eae", default-features = false }
+#sc-network = { git = "https://github.com/subspace/substrate", rev = "88bb945975301f9b29bad96dc4590c33f1029eae" }
+#sp-timestamp = { git = "https://github.com/subspace/substrate", rev = "88bb945975301f9b29bad96dc4590c33f1029eae" }
+#sp-tracing = { version = "6.0.0", git = "https://github.com/subspace/substrate", rev = "88bb945975301f9b29bad96dc4590c33f1029eae" }
+#sc-network-test = { version = "0.8.0", path = "../../substrate/sc-network-test" }
+#subspace-proof-of-space = { version = "0.1.0", path = "../subspace-proof-of-space", features = ["shim"] }
+#substrate-test-runtime = { version = "2.0.0", path = "../../substrate/substrate-test-runtime" }
+#substrate-test-runtime-client = { version = "2.0.0", path = "../../substrate/substrate-test-runtime-client" }
+#tokio = "1.27.0"

@@ -1,0 +1,63 @@
+[package]
+name = "sp-consensus-subspace"
+version = "0.1.0"
+authors = ["Parity Technologies <admin@parity.io>", "Subspace Labs <admin@subspace.network>"]
+description = "Primitives for Subspace consensus"
+edition = "2021"
+license = "Apache-2.0"
+homepage = "https://subspace.network"
+repository = "https://github.com/autonomys/subspace"
+readme = "README.md"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+async-trait = { version = "0.1.83", optional = true }
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false }
+log = { version = "0.4.22", default-features = false }
+scale-info = { version = "2.11.2", default-features = false, features = ["derive"] }
+schnorrkel = { version = "0.11.4", default-features = false }
+sp-api = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-application-crypto = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-consensus-slots = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-core = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-externalities = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-inherents = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-io = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-runtime = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-runtime-interface = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-std = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-timestamp = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42", default-features = false }
+subspace-core-primitives = { version = "0.1.0", path = "../subspace-core-primitives", default-features = false }
+subspace-kzg = { version = "0.1.0", path = "../../shared/subspace-kzg", optional = true }
+subspace-proof-of-space = { version = "0.1.0", path = "../subspace-proof-of-space", default-features = false }
+subspace-verification = { version = "0.1.0", path = "../subspace-verification", default-features = false }
+thiserror = { version = "2.0.0", default-features = false }
+
+[features]
+default = ["std"]
+std = [
+    "async-trait",
+    "codec/std",
+    "log/std",
+    "scale-info/std",
+    "schnorrkel/std",
+    "sp-api/std",
+    "sp-application-crypto/std",
+    "sp-consensus-slots/std",
+    "sp-core/std",
+    "sp-externalities/std",
+    "sp-inherents/std",
+    "sp-io/std",
+    "sp-runtime/std",
+    "sp-runtime-interface/std",
+    "sp-std/std",
+    "sp-timestamp/std",
+    "subspace-core-primitives/std",
+    "subspace-kzg/std",
+    "subspace-proof-of-space/std",
+    "subspace-verification/kzg",
+    "subspace-verification/std",
+    "thiserror/std",
+]

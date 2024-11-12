@@ -1,0 +1,26 @@
+[package]
+name = "sp-objects"
+version = "0.1.0"
+authors = ["Vedhavyas Singareddi <ved@subspace.network>"]
+edition = "2021"
+license = "Apache-2.0"
+homepage = "https://subspace.network"
+repository = "https://github.com/autonomys/subspace"
+description = "Primitives for Objects"
+readme = "README.md"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+sp-api = { default-features = false, git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+subspace-core-primitives = { version = "0.1.0", default-features = false, path = "../subspace-core-primitives" }
+subspace-runtime-primitives = { version = "0.1.0", default-features = false, path = "../subspace-runtime-primitives" }
+
+[features]
+default = ["std"]
+std = [
+    "sp-api/std",
+    "subspace-core-primitives/std",
+    "subspace-runtime-primitives/std",
+]

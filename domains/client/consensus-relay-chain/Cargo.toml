@@ -1,0 +1,11 @@
+[package]
+name = "domain-client-consensus-relay-chain"
+description = "The relay-chain provided consensus algorithm"
+version = "0.1.0"
+authors = ["Parity Technologies <admin@parity.io>"]
+edition = "2021"
+
+[dependencies]
+async-trait = "0.1.83"
+sc-consensus = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
+sp-runtime = { git = "https://github.com/subspace/polkadot-sdk", rev = "5871818e1d736f1843eb9078f886290695165c42" }
