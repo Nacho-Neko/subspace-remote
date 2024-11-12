@@ -18,68 +18,6 @@ env:
   CARGO_INCREMENTAL: 0
 
 jobs:
-  container-linux:
-    runs-on: ${{ fromJson(github.repository_owner == 'autonomys' && '["self-hosted", "ubuntu-22.04-x86-64"]' || '"ubuntu-22.04"') }}
-    permissions:
-      contents: write
-      packages: write
-    strategy:
-      matrix:
-        image:
-          - farmer
-          - node
-          - bootstrap-node
-      fail-fast: false
-
-    steps:
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
-
-      - name: Log into registry
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
-
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
-        with:
-          images: |
-            ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
-          tags: |
-            type=ref,event=tag
-            type=ref,event=branch
-            type=sha,format=long
-          flavor: |
-            latest=false
-            suffix=
-
-      - name: Build and push ${{ matrix.image }} image
-        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
-        with:
-          file: docker/${{ matrix.image }}.Dockerfile
-          # TODO: Add `linux/riscv64` once https://github.com/paritytech/polkadot-sdk/issues/5996 is resolved and ring
-          #  0.16.x is no longer in dependencies
-          # TODO: Add linux/amd64/v4 when runner supports it
-          platforms: linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            SUBSTRATE_CLI_GIT_COMMIT_HASH=${{ github.sha }}
-
-      - name: Trigger trivy-security-scan Workflow
-        uses: peter-evans/repository-dispatch@ff45666b9427631e3450c54a1bcbee4d9ff4d7c0 # @v3.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: trivy-scan-dispatch
-          client-payload: '{"image": "ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:sha-${{ github.sha }}"}'
-
   executables:
     strategy:
       matrix:
@@ -232,58 +170,11 @@ jobs:
         # TODO: We don't configure CUDA for cross-compilation purposes, hence only x86-64 for now
         if: (runner.os == 'Linux' || runner.os == 'Windows') && startsWith(matrix.build.target, 'x86_64')
 
-      - name: Build node
-        run: |
-          cargo -Zgitoxide -Zgit build --locked -Z build-std --target ${{ matrix.build.target }} --profile production --bin subspace-node
-
-      - name: Sign Application (macOS)
-        run: |
-          echo "Importing certificate"
-          echo "${{ secrets.MACOS_CERTIFICATE }}" | base64 --decode > certificate.p12
-          security create-keychain -p "${{ secrets.MACOS_CERTIFICATE_PW }}" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "${{ secrets.MACOS_CERTIFICATE_PW }}" build.keychain
-          security import certificate.p12 -k build.keychain -P "${{ secrets.MACOS_CERTIFICATE_PW }}" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.MACOS_CERTIFICATE_PW }}" build.keychain
-
-          echo "Signing farmer"
-          codesign --force --options=runtime --entitlements .github/workflows/Entitlements.plist -s "${{ secrets.MACOS_IDENTITY }}" --timestamp ${{ env.PRODUCTION_TARGET }}/subspace-farmer
-
-          echo "Signing node"
-          codesign --force --options=runtime --entitlements .github/workflows/Entitlements.plist -s "${{ secrets.MACOS_IDENTITY }}" --timestamp ${{ env.PRODUCTION_TARGET }}/subspace-node
-
-          echo "Creating a ZIP archive"
-          mkdir -p ${{ env.PRODUCTION_TARGET }}/macos-binaries
-          cp ${{ env.PRODUCTION_TARGET }}/subspace-farmer ${{ env.PRODUCTION_TARGET }}/subspace-node ${{ env.PRODUCTION_TARGET }}/macos-binaries
-          ditto -c -k --rsrc ${{ env.PRODUCTION_TARGET }}/macos-binaries subspace-binaries.zip
-
-          echo "Notarizing ZIP archive file"
-          xcrun notarytool submit subspace-binaries.zip --apple-id "${{ secrets.MACOS_APPLE_ID }}" --password "${{ secrets.MACOS_APP_PW }}" --team-id "${{ secrets.MACOS_TEAM_ID }}" --wait
-
-          # stapling does not work for .zip archives only .app bundles and .dmg files. Commenting this for now!
-          # echo "Stapling notarization to ZIP file"
-          # xcrun stapler staple subspace-binaries.zip
-
-          echo "Done!"
-        # Allow code signing to fail on non-release builds and in non-subspace repos (forks)
-        continue-on-error: ${{ github.repository_owner != 'autonomys' || github.event_name != 'push' || github.ref_type != 'tag' }}
-        if: runner.os == 'macOS'
-
-
-      - name: Sign Application (Windows)
-        run: |
-          AzureSignTool sign --azure-key-vault-url "${{ secrets.AZURE_KEY_VAULT_URI }}" --azure-key-vault-client-id "${{ secrets.AZURE_CLIENT_ID }}" --azure-key-vault-client-secret "${{ secrets.AZURE_CLIENT_SECRET }}" --azure-key-vault-tenant-id "${{ secrets.AZURE_TENANT_ID }}" --azure-key-vault-certificate "${{ secrets.AZURE_CERT_NAME }}" --file-digest sha512 --timestamp-rfc3161 http://timestamp.digicert.com -v "${{ env.PRODUCTION_TARGET }}/subspace-farmer.exe"
-          AzureSignTool sign --azure-key-vault-url "${{ secrets.AZURE_KEY_VAULT_URI }}" --azure-key-vault-client-id "${{ secrets.AZURE_CLIENT_ID }}" --azure-key-vault-client-secret "${{ secrets.AZURE_CLIENT_SECRET }}" --azure-key-vault-tenant-id "${{ secrets.AZURE_TENANT_ID }}" --azure-key-vault-certificate "${{ secrets.AZURE_CERT_NAME }}" --file-digest sha512 --timestamp-rfc3161 http://timestamp.digicert.com -v "${{ env.PRODUCTION_TARGET }}/subspace-farmer-rocm.exe"
-          AzureSignTool sign --azure-key-vault-url "${{ secrets.AZURE_KEY_VAULT_URI }}" --azure-key-vault-client-id "${{ secrets.AZURE_CLIENT_ID }}" --azure-key-vault-client-secret "${{ secrets.AZURE_CLIENT_SECRET }}" --azure-key-vault-tenant-id "${{ secrets.AZURE_TENANT_ID }}" --azure-key-vault-certificate "${{ secrets.AZURE_CERT_NAME }}" --file-digest sha512 --timestamp-rfc3161 http://timestamp.digicert.com -v "${{ env.PRODUCTION_TARGET }}/subspace-node.exe"
-        # Allow code signing to fail on non-release builds and in non-subspace repos (forks)
-        continue-on-error: ${{ github.repository_owner != 'autonomys' || github.event_name != 'push' || github.ref_type != 'tag' }}
-        if: runner.os == 'Windows'
 
       - name: Prepare executables for uploading (Ubuntu)
         run: |
           mkdir executables
           mv ${{ env.PRODUCTION_TARGET }}/subspace-farmer executables/subspace-farmer-${{ matrix.build.suffix }}
-          mv ${{ env.PRODUCTION_TARGET }}/subspace-node executables/subspace-node-${{ matrix.build.suffix }}
         if: runner.os == 'Linux'
 
       - name: Prepare executables for uploading (Ubuntu, ROCm)
@@ -295,12 +186,9 @@ jobs:
         run: |
           mkdir executables
           mv ${{ env.PRODUCTION_TARGET }}/subspace-farmer executables/subspace-farmer-${{ matrix.build.suffix }}
-          mv ${{ env.PRODUCTION_TARGET }}/subspace-node executables/subspace-node-${{ matrix.build.suffix }}
           # Zip it so that signature is not lost
           ditto -c -k --rsrc executables/subspace-farmer-${{ matrix.build.suffix }} executables/subspace-farmer-${{ matrix.build.suffix }}.zip
-          ditto -c -k --rsrc executables/subspace-node-${{ matrix.build.suffix }} executables/subspace-node-${{ matrix.build.suffix }}.zip
           rm executables/subspace-farmer-${{ matrix.build.suffix }}
-          rm executables/subspace-node-${{ matrix.build.suffix }}
         if: runner.os == 'macOS'
 
       - name: Prepare executables for uploading (Windows)
@@ -308,7 +196,6 @@ jobs:
           mkdir executables
           move ${{ env.PRODUCTION_TARGET }}/subspace-farmer.exe executables/subspace-farmer-${{ matrix.build.suffix }}.exe
           move ${{ env.PRODUCTION_TARGET }}/subspace-farmer-rocm.exe executables/subspace-farmer-rocm-${{ matrix.build.suffix }}.exe
-          move ${{ env.PRODUCTION_TARGET }}/subspace-node.exe executables/subspace-node-${{ matrix.build.suffix }}.exe
         if: runner.os == 'Windows'
 
       - name: Upload node and farmer executables to artifacts
