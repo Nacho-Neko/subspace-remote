@@ -2,11 +2,8 @@
 
 use crate::cluster::cache::{ClusterCacheReadPieceRequest, ClusterCacheReadPiecesRequest};
 use crate::cluster::controller::{
-    ClusterControllerArchivedSegmentHeaderBroadcast, ClusterControllerFarmerAppInfoRequest,
     ClusterControllerFindPieceInCacheRequest, ClusterControllerFindPiecesInCacheRequest,
     ClusterControllerPieceRequest, ClusterControllerPiecesRequest,
-    ClusterControllerRewardSigningBroadcast, ClusterControllerSegmentHeadersRequest,
-    ClusterControllerSlotInfoBroadcast, ClusterControllerSolutionNotification,
 };
 use crate::cluster::nats_client::NatsClient;
 use crate::farm::plotted_pieces::PlottedPieces;
@@ -15,9 +12,6 @@ use crate::farmer_cache::FarmerCache;
 use crate::node_client::NodeClient;
 use async_lock::RwLock as AsyncRwLock;
 use async_trait::async_trait;
-use backoff::backoff::Backoff;
-use backoff::future::retry;
-use backoff::ExponentialBackoff;
 use futures::channel::mpsc;
 use futures::future::FusedFuture;
 use futures::stream::FuturesUnordered;
@@ -27,7 +21,6 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::hash::Hash;
 use std::pin::Pin;
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Weak};
 use std::task::{Context, Poll};
 use subspace_core_primitives::pieces::{Piece, PieceIndex};
