@@ -187,13 +187,17 @@ where
                     piece_index,
                     cached_pieces,
                 } = request;
+                /*
                 debug!(?piece_index, "Piece request received. Trying cache...");
 
                 let weak_plotted_pieces = weak_plotted_pieces.clone();
                 let farmer_cache = farmer_cache.clone();
                 let mut cached_pieces = Arc::unwrap_or_clone(cached_pieces);
+                */
 
                 async move {
+                    return None;
+                    /*
                     let piece_from_cache = farmer_cache.get_piece(piece_index.to_multihash()).await;
                     cached_pieces.truncate(PieceByIndexRequest::RECOMMENDED_LIMIT);
                     let cached_pieces = farmer_cache.has_pieces(cached_pieces).await;
@@ -227,6 +231,7 @@ where
                             cached_pieces,
                         })
                     }
+                    */
                 }
                 .in_current_span()
             }),
