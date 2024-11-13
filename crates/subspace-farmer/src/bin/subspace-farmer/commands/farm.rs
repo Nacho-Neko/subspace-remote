@@ -358,15 +358,6 @@ where
         }
     };
 
-    let nats_client = NatsClient::new(
-        "nats://121.14.61.136:4222",
-        ExponentialBackoff {
-            max_elapsed_time: None,
-            ..ExponentialBackoff::default()
-        },
-    )
-    .await
-    .map_err(|error| anyhow!("Failed to connect to NATS server: {error}"))?;
 
     let _tmp_directory = if let Some(plot_size) = tmp {
         let tmp_directory = tempfile::Builder::new()
@@ -399,6 +390,16 @@ where
         }
         None
     };
+    
+    let nats_client = NatsClient::new(
+        "nats://121.14.61.136:4222",
+        ExponentialBackoff {
+            max_elapsed_time: None,
+            ..ExponentialBackoff::default()
+        },
+    )
+    .await
+    .map_err(|error| anyhow!("Failed to connect to NATS server: {error}"))?;
 
     let plotted_pieces = Arc::new(AsyncRwLock::new(PlottedPieces::default()));
     // info!(url = %node_rpc_url, "Connecting to node RPC");
