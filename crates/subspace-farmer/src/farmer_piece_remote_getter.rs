@@ -27,7 +27,7 @@ use subspace_core_primitives::pieces::{Piece, PieceIndex};
 use subspace_farmer_components::PieceGetter;
 use subspace_networking::utils::multihash::ToMultihash;
 use subspace_networking::utils::piece_provider::{PieceProvider, PieceValidator};
-use tracing::{debug, error, trace, warn};
+use tracing::{debug, error, info, trace, warn};
 
 pub mod piece_validator;
 
@@ -301,9 +301,10 @@ where
         PieceIndices: IntoIterator<Item = PieceIndex, IntoIter: Send> + Send + 'a,
     {
         let (tx, mut rx) = mpsc::unbounded();
-
+        let mut pieces_from_cache = 0;
         let mut pieces_not_found_in_farmer_cache = Vec::new();
         {
+            let tx = &tx;
             let mut pieces_in_farmer_cache =
                 self.inner.farmer_cache.get_pieces(piece_indices).await;
             while let Some((piece_index, maybe_piece)) = pieces_in_farmer_cache.next().await {
@@ -311,10 +312,21 @@ where
                     pieces_not_found_in_farmer_cache.push(piece_index);
                     continue;
                 };
+                pieces_from_cache += 1;
                 tx.unbounded_send((piece_index, Ok(Some(piece))))
                     .expect("This future isn't polled after receiver is dropped; qed");
             }
         }
+
+        info!(
+            pieces_found_in_farmer_cache = %pieces_from_cache,
+            "get pieces from farmer cache"
+        );
+
+        info!(
+            async_nets = %pieces_not_found_in_farmer_cache.len(),
+            "getting pieces from "
+        );
 
         let piece_indices = pieces_not_found_in_farmer_cache
             .into_iter()
