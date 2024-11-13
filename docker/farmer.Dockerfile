@@ -117,7 +117,7 @@ RUN \
     if [ $TARGETARCH = "amd64" ] && [ "$RUSTFLAGS" = "" ]; then \
       case "$TARGETVARIANT" in \
         # x86-64-v2 with AES-NI
-        "v2") export RUSTFLAGS="-C target-cpu=x86-64-v2 -C target-feature=+aes" ;; \
+        "v2") export RUSTFLAGS="-C target-cpu=x86-64-v2" ;; \
         # x86-64-v3 with AES-NI
         "v3") export RUSTFLAGS="-C target-cpu=x86-64-v3 -C target-feature=+aes" ;; \
         # v4 is compiled for Zen 4+
@@ -169,7 +169,7 @@ ARG TARGETARCH
 # ROCm is only used on x86-64 since they don't have other packages
 ARG ROCM_VERSION=6.2.2
 RUN \
-    if [ $BUILDARCH = "amd64" ] && [ $TARGETARCH = "amd64" ]; then \
+    if [ "$BUILDARCH/$TARGETARCH" = "amd64/amd64" ]; then \
       apt-get update && \
       DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl ca-certificates gpg && \
       mkdir -p --mode=0755 /etc/apt/keyrings && \

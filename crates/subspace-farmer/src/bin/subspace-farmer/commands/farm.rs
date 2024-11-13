@@ -71,6 +71,8 @@ const MAX_SPACE_PLEDGED_FOR_PLOT_CACHE_ON_WINDOWS: u64 = 7 * 1024 * 1024 * 1024 
 const FARM_ERROR_PRINT_INTERVAL: Duration = Duration::from_secs(30);
 const PLOTTING_RETRY_INTERVAL: Duration = Duration::from_secs(5);
 
+type FarmIndex = u8;
+
 #[derive(Debug, Parser)]
 struct CpuPlottingOptions {
     /// How many sectors a farmer will download concurrently. Limits memory usage of
@@ -147,9 +149,9 @@ struct CpuPlottingOptions {
 #[cfg(feature = "cuda")]
 #[derive(Debug, Parser)]
 struct CudaPlottingOptions {
-    /// How many sectors a farmer will download concurrently during plotting with a CUDA GPU.
-    /// Limits memory usage of the plotting process. Defaults to the number of CUDA GPUs found
-    /// + 1 to download future sector ahead of time.
+    /// How many sectors farmer will download concurrently during plotting with CUDA GPUs.
+    /// Limits memory usage of the plotting process. Defaults to the number of CUDA GPUs * 3,
+    /// to download future sectors ahead of time.
     ///
     /// Increasing this value will cause higher memory usage.
     #[arg(long)]
@@ -165,9 +167,9 @@ struct CudaPlottingOptions {
 #[cfg(feature = "rocm")]
 #[derive(Debug, Parser)]
 struct RocmPlottingOptions {
-    /// How many sectors a farmer will download concurrently during plotting with a ROCm GPU.
-    /// Limits memory usage of the plotting process. Defaults to the number of ROCm GPUs found
-    /// + 1 to download future sector ahead of time.
+    /// How many sectors farmer will download concurrently during plotting with ROCm GPUs.
+    /// Limits memory usage of the plotting process. Defaults to the number of ROCm GPUs * 3,
+    /// to download future sectors ahead of time.
     ///
     /// Increasing this value will cause higher memory usage.
     #[arg(long)]
@@ -255,12 +257,13 @@ pub(crate) struct FarmingArgs {
     rocm_plotting_options: RocmPlottingOptions,
     /// How many sectors a will be plotted concurrently per farm.
     ///
-    /// Defaults to 4, but can be decreased if there is a large number of farms available to
-    /// decrease peak memory usage, especially with slow disks.
+    /// Defaults to 2, but can be decreased if there is a large number of farms available to
+    /// decrease peak memory usage, especially with slow disks, or slightly increased to utilize all
+    /// compute available in case of a single farm.
     ///
     /// Increasing this value is not recommended and can result in excessive RAM usage due to more
     /// sectors being stuck in-flight if writes to farm disk are too slow.
-    #[arg(long, default_value = "4")]
+    #[arg(long, default_value = "2")]
     max_plotting_sectors_per_farm: NonZeroUsize,
     /// Enable plot cache.
     ///
@@ -759,7 +762,7 @@ where
 
     info!("Finished collecting already plotted pieces successfully");
 
-    let mut farms_stream = (0u8..)
+    let mut farms_stream = (FarmIndex::MIN..)
         .zip(farms)
         .map(|(farm_index, farm)| {
             let plotted_pieces = Arc::clone(&plotted_pieces);
@@ -964,7 +967,7 @@ where
     let cpu_downloading_semaphore = Arc::new(Semaphore::new(
         cpu_sector_downloading_concurrency
             .map(|cpu_sector_downloading_concurrency| cpu_sector_downloading_concurrency.get())
-            .unwrap_or(plotting_thread_pool_core_indices.len() + 1),
+            .unwrap_or(plotting_thread_pool_core_indices.len() * 3),
     ));
 
     let cpu_record_encoding_concurrency = cpu_record_encoding_concurrency.unwrap_or_else(|| {
@@ -1062,7 +1065,7 @@ where
     let cuda_downloading_semaphore = Arc::new(Semaphore::new(
         cuda_sector_downloading_concurrency
             .map(|cuda_sector_downloading_concurrency| cuda_sector_downloading_concurrency.get())
-            .unwrap_or(cuda_devices.len() + 1),
+            .unwrap_or(cuda_devices.len() * 3),
     ));
 
     Ok(Some(
