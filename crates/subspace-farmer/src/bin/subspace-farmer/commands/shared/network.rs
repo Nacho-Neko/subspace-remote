@@ -138,12 +138,17 @@ where
                         cached_pieces,
                     } = request;
                     debug!(?piece_index, "Cached piece request received");
-
+                    
+                    /* 
                     let maybe_weak_node = Arc::clone(&maybe_weak_node);
                     let farmer_cache = farmer_cache.clone();
                     let mut cached_pieces = Arc::unwrap_or_clone(cached_pieces);
+                     */
 
                     async move {
+                        return None;
+
+                        /* 
                         let piece_from_cache =
                             farmer_cache.get_piece(piece_index.to_multihash()).await;
                         cached_pieces.truncate(CachedPieceByIndexRequest::RECOMMENDED_LIMIT);
@@ -178,6 +183,7 @@ where
                             },
                             cached_pieces,
                         })
+                        */
                     }
                     .in_current_span()
                 })
