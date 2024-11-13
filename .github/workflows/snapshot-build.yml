@@ -34,9 +34,6 @@ jobs:
             target: aarch64-unknown-linux-gnu
             suffix: ubuntu-aarch64-${{ github.ref_name }}
             rustflags: "-C linker=aarch64-linux-gnu-gcc"
-          - os: ${{ fromJson(github.repository_owner == 'autonomys' && '["self-hosted", "macos-14-arm64"]' || '"macos-14"') }}
-            target: aarch64-apple-darwin
-            suffix: macos-aarch64-${{ github.ref_name }}
           - os: ${{ fromJson(github.repository_owner == 'autonomys' && '["self-hosted", "windows-server-2022-x86-64"]' || '"windows-2022"') }}
             target: x86_64-pc-windows-msvc
             suffix: windows-x86_64-skylake-${{ github.ref_name }}
@@ -55,33 +52,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
-      # On macOS, we need a proper Clang version, not Apple's custom version without wasm32 support
-      - name: Install LLVM and Clang for macOS
-        uses: KyleMayes/install-llvm-action@dec985c8d7b46a2f363ea1a78f660c946a3349ea # v2.0.1
-        with:
-          env: true
-          version: 17
-        if: runner.os == 'macOS'
-
-      # Because macOS, see https://andreasfertig.blog/2021/02/clang-and-gcc-on-macos-catalina-finding-the-include-paths/
-      - name: Configure C compiler macOS
-        run: |
-          echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
-        if: runner.os == 'macOS'
-
-      - name: Install glibtoolize (macOS)
-        run: brew install libtool
-        if: runner.os == 'macOS'
-
       - name: Install Protoc
         uses: arduino/setup-protoc@c65c819552d16ad3c9b72d9dfd5ba5237b9c906b # v3.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      # Needed for hwloc
-      - name: Install automake (macOS)
-        run: brew install automake
-        if: runner.os == 'macOS'
 
       - name: AArch64 cross-compile packages
         run: |
@@ -181,15 +155,6 @@ jobs:
         run: |
           mv ${{ env.PRODUCTION_TARGET }}/subspace-farmer-rocm executables/subspace-farmer-rocm-${{ matrix.build.suffix }}
         if: runner.os == 'Linux' && startsWith(matrix.build.target, 'x86_64')
-
-      - name: Prepare executables for uploading (macOS)
-        run: |
-          mkdir executables
-          mv ${{ env.PRODUCTION_TARGET }}/subspace-farmer executables/subspace-farmer-${{ matrix.build.suffix }}
-          # Zip it so that signature is not lost
-          ditto -c -k --rsrc executables/subspace-farmer-${{ matrix.build.suffix }} executables/subspace-farmer-${{ matrix.build.suffix }}.zip
-          rm executables/subspace-farmer-${{ matrix.build.suffix }}
-        if: runner.os == 'macOS'
 
       - name: Prepare executables for uploading (Windows)
         run: |
