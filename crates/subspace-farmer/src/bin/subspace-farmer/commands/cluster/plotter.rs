@@ -3,8 +3,11 @@ use anyhow::anyhow;
 use async_lock::Mutex as AsyncMutex;
 use clap::Parser;
 use prometheus_client::registry::Registry;
+use rand::Rng;
+use std::fs;
 use std::future::Future;
 use std::num::NonZeroUsize;
+use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
@@ -13,6 +16,9 @@ use subspace_erasure_coding::ErasureCoding;
 use subspace_farmer::cluster::controller::ClusterPieceGetter;
 use subspace_farmer::cluster::nats_client::NatsClient;
 use subspace_farmer::cluster::plotter::plotter_service;
+use subspace_farmer::disk_piece_cache::DiskPieceCache;
+use subspace_farmer::farmer_cache::{FarmerCache, FarmerCacheWorker};
+use subspace_farmer::node_client::remote_rpc_node_client::RemoteNodeClient;
 use subspace_farmer::plotter::cpu::CpuPlotter;
 #[cfg(feature = "cuda")]
 use subspace_farmer::plotter::gpu::cuda::CudaRecordsEncoder;
@@ -23,13 +29,18 @@ use subspace_farmer::plotter::gpu::GpuPlotter;
 use subspace_farmer::plotter::pool::PoolPlotter;
 use subspace_farmer::plotter::Plotter;
 use subspace_farmer::utils::{
-    create_plotting_thread_pool_manager, parse_cpu_cores_sets, thread_pool_core_indices,
+    create_plotting_thread_pool_manager, parse_cpu_cores_sets, run_future_in_dedicated_thread,
+    thread_pool_core_indices,
 };
 use subspace_farmer_components::PieceGetter;
 use subspace_kzg::Kzg;
+use subspace_networking::libp2p::PeerId;
+use subspace_networking::Multihash;
 use subspace_proof_of_space::Table;
 use tokio::sync::Semaphore;
 use tracing::info;
+
+use super::cache::DiskCache;
 
 const PLOTTING_RETRY_INTERVAL: Duration = Duration::from_secs(5);
 
@@ -137,6 +148,9 @@ pub(super) struct PlotterArgs {
     /// Additional cluster components
     #[clap(raw = true)]
     pub(super) additional_components: Vec<String>,
+    #[arg(long)]
+    /// Path to directory where cache is stored
+    piece_cache: Option<DiskCache>,
 }
 
 pub(super) async fn plotter<PosTable>(
@@ -148,6 +162,7 @@ where
     PosTable: Table,
 {
     let PlotterArgs {
+        piece_cache,
         cpu_plotting_options,
         #[cfg(feature = "cuda")]
         cuda_plotting_options,
@@ -162,7 +177,40 @@ where
             .expect("Not zero; qed"),
     )
     .map_err(|error| anyhow!("Failed to instantiate erasure coding: {error}"))?;
-    let piece_getter = ClusterPieceGetter::new(nats_client.clone());
+
+    // 声明类型为 Option<FarmerCache>
+    let disk_cache: Option<DiskPieceCache> = if let Some(piece_cache) = piece_cache {
+        let piece_cache_directory = &piece_cache.directory;
+        if !piece_cache.directory.exists() {
+            if let Err(error) = fs::create_dir(piece_cache_directory) {
+                return Err(anyhow!(
+                    "Directory {} doesn't exist and can't be created: {}",
+                    piece_cache_directory.display(),
+                    error
+                ));
+            }
+        }
+        Some(
+            DiskPieceCache::open(
+                piece_cache_directory,
+                u32::try_from(piece_cache.allocated_space / DiskPieceCache::element_size() as u64)
+                    .unwrap_or(u32::MAX),
+                None,
+                Some(registry),
+            )
+            .map_err(|error| {
+                anyhow!(
+                    "Failed to open piece cache at {}: {error}",
+                    piece_cache_directory.display()
+                )
+            })
+            .unwrap(),
+        )
+    } else {
+        None
+    };
+
+    let piece_getter = ClusterPieceGetter::new(nats_client.clone(), disk_cache);
 
     let global_mutex = Arc::default();
 

@@ -13,6 +13,7 @@ use crate::cluster::cache::{ClusterCacheReadPieceRequest, ClusterCacheReadPieces
 use crate::cluster::nats_client::{
     GenericBroadcast, GenericNotification, GenericRequest, GenericStreamRequest, NatsClient,
 };
+use crate::disk_piece_cache::DiskPieceCache;
 use crate::farm::{PieceCacheId, PieceCacheOffset};
 use crate::farmer_cache::FarmerCache;
 use crate::node_client::NodeClient;
@@ -25,6 +26,7 @@ use futures::stream::FuturesUnordered;
 use futures::{select, stream, FutureExt, Stream, StreamExt};
 use parity_scale_codec::{Decode, Encode};
 use parking_lot::Mutex;
+use prometheus_client::metrics::counter;
 use std::collections::{HashMap, HashSet};
 use std::pin::Pin;
 use std::sync::Arc;
@@ -32,6 +34,7 @@ use std::task::Poll;
 use subspace_core_primitives::pieces::{Piece, PieceIndex};
 use subspace_core_primitives::segments::{SegmentHeader, SegmentIndex};
 use subspace_farmer_components::PieceGetter;
+use subspace_networking::utils::multihash::ToMultihash;
 use subspace_rpc_primitives::{
     FarmerAppInfo, RewardSignatureResponse, RewardSigningInfo, SlotInfo, SolutionResponse,
 };
@@ -195,11 +198,14 @@ impl GenericStreamRequest for ClusterControllerPiecesRequest {
 #[derive(Debug, Clone)]
 pub struct ClusterPieceGetter {
     nats_client: NatsClient,
+    disk_cache: Option<DiskPieceCache>,
 }
 
 #[async_trait]
 impl PieceGetter for ClusterPieceGetter {
     async fn get_piece(&self, piece_index: PieceIndex) -> anyhow::Result<Option<Piece>> {
+        trace!(%piece_index, "Getting piece from farmer cache");
+
         if let Some((piece_cache_id, piece_cache_offset)) = self
             .nats_client
             .request(
@@ -214,6 +220,15 @@ impl PieceGetter for ClusterPieceGetter {
                 %piece_cache_offset,
                 "Found piece in cache, retrieving"
             );
+
+            if let Some(disk_cache) = &self.disk_cache {
+                if let Ok(piece_cache) = disk_cache.read_piece(piece_cache_offset) {
+                    trace!(%piece_index, "Got piece from farmer cache successfully");
+                    if let Some((piece_index, piece)) = piece_cache {
+                        return Ok(Some(piece));
+                    }
+                }
+            }
 
             match self
                 .nats_client
@@ -235,6 +250,12 @@ impl PieceGetter for ClusterPieceGetter {
                             %piece_cache_offset,
                             "Retrieved piece from cache successfully"
                         );
+
+                        if let Some(disk_cache) = &self.disk_cache {
+                            disk_cache
+                                .write_piece(piece_cache_offset, piece_index, &piece)
+                                .unwrap();
+                        }
 
                         return Ok(Some(piece));
                     } else {
@@ -303,6 +324,17 @@ impl PieceGetter for ClusterPieceGetter {
             while let Some((_piece_index, piece_cache_id, piece_cache_offset)) =
                 cached_pieces.next().await
             {
+                if let Some(disk_cache) = &self.disk_cache {
+                    if let Ok(piece_cache) = disk_cache.read_piece(piece_cache_offset) {
+                        trace!(%_piece_index, "Got piece from farmer cache successfully");
+                        if let Some((_piece_index, piece)) = piece_cache {
+                            tx.unbounded_send((_piece_index, Ok(Some(piece))))
+                                .expect("This future isn't polled after receiver is dropped; qed");
+                            continue;
+                        }
+                    }
+                }
+
                 cached_pieces_by_cache_id
                     .entry(piece_cache_id)
                     .or_default()
@@ -350,6 +382,12 @@ impl PieceGetter for ClusterPieceGetter {
 
                             if let Some((piece_index, piece)) = maybe_piece {
                                 piece_indices_to_get.lock().remove(&piece_index);
+
+                                if let Some(disk_cache) = &self.disk_cache {
+                                    disk_cache
+                                        .write_piece(piece_offset, piece_index, &piece)
+                                        .unwrap();
+                                }
 
                                 tx.unbounded_send((piece_index, Ok(Some(piece)))).expect(
                                     "This future isn't polled after receiver is dropped; qed",
@@ -432,8 +470,11 @@ impl PieceGetter for ClusterPieceGetter {
 impl ClusterPieceGetter {
     /// Create new instance
     #[inline]
-    pub fn new(nats_client: NatsClient) -> Self {
-        Self { nats_client }
+    pub fn new(nats_client: NatsClient, disk_cache: Option<DiskPieceCache>) -> Self {
+        Self {
+            nats_client,
+            disk_cache,
+        }
     }
 }
 

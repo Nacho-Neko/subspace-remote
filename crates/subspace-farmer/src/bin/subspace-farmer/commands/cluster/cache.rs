@@ -20,11 +20,11 @@ use subspace_farmer::utils::AsyncJoinOnDrop;
 pub(super) const CACHE_IDENTIFICATION_BROADCAST_INTERVAL: Duration = Duration::from_secs(30);
 
 #[derive(Debug, Clone)]
-struct DiskCache {
+pub struct DiskCache {
     /// Path to directory where cache is stored
-    directory: PathBuf,
+    pub directory: PathBuf,
     /// How much space in bytes can cache use
-    allocated_space: u64,
+    pub allocated_space: u64,
 }
 
 impl FromStr for DiskCache {
