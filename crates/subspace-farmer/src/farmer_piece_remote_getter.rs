@@ -209,6 +209,12 @@ where
     NC: NodeClient,
 {
     async fn get_piece(&self, piece_index: PieceIndex) -> anyhow::Result<Option<Piece>> {
+        let farmer_cache = &self.inner.farmer_cache;
+        if let Some(piece) = farmer_cache.get_piece(piece_index.to_multihash()).await {
+            trace!(%piece_index, "Got piece from farmer cache successfully");
+            return Ok(Some(piece));
+        }
+
         if let Some((piece_cache_id, piece_cache_offset)) = self
             .inner
             .nats_client
